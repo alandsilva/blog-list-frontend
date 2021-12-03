@@ -1,5 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Blog from './components/Blog';
+import BlogForm from './components/BlogForm';
+import Togglable from './components/Togglable';
+import './index.css';
 import blogService from './services/blogs';
 import loginService from './services/login';
 
@@ -8,7 +11,33 @@ const App = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [user, setUser] = useState(null);
+  const [title, setTitle] = useState('');
+  const [author, setAuthor] = useState('');
+  const [url, setUrl] = useState('');
   const [errorMessage, setErrorMessage] = useState(null);
+  const [successMessage, setSuccessMessage] = useState(null);
+
+  const blogFormRef = useRef();
+
+  const handleCreateBlog = async (event) => {
+    event.preventDefault();
+    const newBlog = { title, author, url };
+
+    try {
+      const response = await blogService.create(newBlog);
+      updateSuccessMessage(
+        `A new blog '${response.title}' by '${response.author}'`
+      );
+      blogFormRef.current.toggleVisibility();
+      setBlogs(blogs.concat(response));
+      setTitle('');
+      setAuthor('');
+      setUrl('');
+    } catch (error) {
+      console.log(error);
+      updateErrorMessage('failed to create blog');
+    }
+  };
 
   const handleLogin = async (event) => {
     event.preventDefault();
@@ -24,7 +53,7 @@ const App = () => {
       setUsername('');
       setPassword('');
     } catch (exception) {
-      setErrorMessage('Wrong credentials');
+      updateErrorMessage('Wrong credentials');
       setTimeout(() => {
         setErrorMessage(null);
       }, 5000);
@@ -34,6 +63,18 @@ const App = () => {
   const handleLogout = () => {
     window.localStorage.removeItem('loggedBloglistUser');
     setUser(null);
+  };
+  const updateErrorMessage = (message) => {
+    setErrorMessage(message);
+    setTimeout(() => {
+      setErrorMessage(null);
+    }, 5000);
+  };
+  const updateSuccessMessage = (message) => {
+    setSuccessMessage(message);
+    setTimeout(() => {
+      setSuccessMessage(null);
+    }, 5000);
   };
 
   useEffect(() => {
@@ -81,13 +122,31 @@ const App = () => {
         <p>
           {user.name} logged in <button onClick={handleLogout}>logout</button>
         </p>
+        <Togglable buttonLabel='create Blog' ref={blogFormRef}>
+          <BlogForm
+            handleSubmit={handleCreateBlog}
+            handleTitleChange={({ target }) => setTitle(target.value)}
+            handleAuthorChange={({ target }) => setAuthor(target.value)}
+            handleUrlChange={({ target }) => setUrl(target.value)}
+            title={title}
+            author={author}
+            url={url}
+          />
+        </Togglable>
+
         {blogs.map((blog) => (
           <Blog key={blog.id} blog={blog} />
         ))}
       </div>
     );
   };
-  return <div>{user === null ? loginForm() : blogsData()}</div>;
+  return (
+    <div>
+      {errorMessage && <p className={'error'}>{errorMessage}</p>}
+      {successMessage && <p className={'success'}>{successMessage}</p>}
+      {user === null ? loginForm() : blogsData()}
+    </div>
+  );
 };
 
 export default App;
