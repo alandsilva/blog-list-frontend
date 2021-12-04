@@ -32,7 +32,8 @@ const Blog = ({ blog, updateBlog, removeBlog, user }) => {
       <div style={showWhenVisible} className='detailsContent'>
         <p className='url'>{blog.url}</p>
         <p className='likes'>
-          likes {blog.likes} <button onClick={handleLikeBlog}>like</button>
+          likes <span className='like-value'>{blog.likes}</span>{' '}
+          <button onClick={handleLikeBlog}>like</button>
         </p>
         <p>{blog.user.name}</p>
 
