@@ -1,16 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Blog from './components/Blog';
 import BlogForm from './components/BlogForm';
+import LoginForm from './components/LoginForm';
 import Togglable from './components/Togglable';
 import './index.css';
-import blogs from './services/blogs';
 import blogService from './services/blogs';
 import loginService from './services/login';
 
 const App = () => {
   const [blogs, setBlogs] = useState([]);
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
   const [user, setUser] = useState(null);
   const [errorMessage, setErrorMessage] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
@@ -26,7 +24,6 @@ const App = () => {
       blogFormRef.current.toggleVisibility();
       setBlogs(blogs.concat(response));
     } catch (error) {
-      console.log(error);
       updateErrorMessage('failed to create blog');
     }
   };
@@ -41,7 +38,6 @@ const App = () => {
         )
       );
     } catch (error) {
-      console.log(error);
       setErrorMessage('failed to update blog');
     }
   };
@@ -50,26 +46,18 @@ const App = () => {
     try {
       await blogService.remove(id);
       setBlogs(blogs.filter((blog) => blog.id !== id));
-      updateSuccessMessage(`Blog was deleted'`);
+      updateSuccessMessage('Blog was deleted');
     } catch (error) {
-      console.log(error);
       setErrorMessage('Failed to remove blog');
     }
   };
 
-  const handleLogin = async (event) => {
-    event.preventDefault();
-    console.log('logging in with', username, password);
+  const handleLogin = async (newLogin) => {
     try {
-      const user = await loginService.login({
-        username,
-        password,
-      });
+      const user = await loginService.login(newLogin);
       window.localStorage.setItem('loggedBloglistUser', JSON.stringify(user));
       blogService.setToken(user.token);
       setUser(user);
-      setUsername('');
-      setPassword('');
     } catch (exception) {
       updateErrorMessage('Wrong credentials');
       setTimeout(() => {
@@ -114,29 +102,7 @@ const App = () => {
   }, []);
 
   const loginForm = () => {
-    return (
-      <form onSubmit={handleLogin}>
-        <div>
-          username
-          <input
-            type='text'
-            value={username}
-            name='Username'
-            onChange={({ target }) => setUsername(target.value)}
-          />
-        </div>
-        <div>
-          password
-          <input
-            type='password'
-            value={password}
-            name='Password'
-            onChange={({ target }) => setPassword(target.value)}
-          />
-        </div>
-        <button type='submit'>login</button>
-      </form>
-    );
+    return <LoginForm login={handleLogin} />;
   };
   const blogsData = () => {
     return (
