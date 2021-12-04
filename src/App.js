@@ -3,6 +3,7 @@ import Blog from './components/Blog';
 import BlogForm from './components/BlogForm';
 import Togglable from './components/Togglable';
 import './index.css';
+import blogs from './services/blogs';
 import blogService from './services/blogs';
 import loginService from './services/login';
 
@@ -11,9 +12,6 @@ const App = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [user, setUser] = useState(null);
-  const [title, setTitle] = useState('');
-  const [author, setAuthor] = useState('');
-  const [url, setUrl] = useState('');
   const [errorMessage, setErrorMessage] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
 
@@ -27,12 +25,35 @@ const App = () => {
       );
       blogFormRef.current.toggleVisibility();
       setBlogs(blogs.concat(response));
-      setTitle('');
-      setAuthor('');
-      setUrl('');
     } catch (error) {
       console.log(error);
       updateErrorMessage('failed to create blog');
+    }
+  };
+
+  const handleUpdateBlog = async (id, updatedBlog) => {
+    try {
+      const response = await blogService.update(id, updatedBlog);
+      updateSuccessMessage(`Liked the '${response.title}' blog`);
+      setBlogs(
+        blogs.map((blog) =>
+          blog.id !== id ? blog : { ...blog, likes: blog.likes + 1 }
+        )
+      );
+    } catch (error) {
+      console.log(error);
+      setErrorMessage('failed to update blog');
+    }
+  };
+
+  const handleRemoveBlog = async (id) => {
+    try {
+      await blogService.remove(id);
+      setBlogs(blogs.filter((blog) => blog.id !== id));
+      updateSuccessMessage(`Blog was deleted'`);
+    } catch (error) {
+      console.log(error);
+      setErrorMessage('Failed to remove blog');
     }
   };
 
@@ -75,7 +96,12 @@ const App = () => {
   };
 
   useEffect(() => {
-    blogService.getAll().then((blogs) => setBlogs(blogs));
+    blogService.getAll().then((blogs) => {
+      blogs.sort((a, b) => {
+        return b.likes - a.likes;
+      });
+      setBlogs(blogs);
+    });
   }, []);
 
   useEffect(() => {
@@ -124,7 +150,13 @@ const App = () => {
         </Togglable>
 
         {blogs.map((blog) => (
-          <Blog key={blog.id} blog={blog} />
+          <Blog
+            key={blog.id}
+            blog={blog}
+            updateBlog={handleUpdateBlog}
+            removeBlog={handleRemoveBlog}
+            user={user}
+          />
         ))}
       </div>
     );

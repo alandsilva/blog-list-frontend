@@ -9,6 +9,9 @@ const BlogForm = ({ createBlog }) => {
     event.preventDefault();
     const newBlog = { title, author, url };
     createBlog(newBlog);
+    setTitle('');
+    setAuthor('');
+    setUrl('');
   };
   return (
     <div>
