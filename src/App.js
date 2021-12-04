@@ -19,10 +19,7 @@ const App = () => {
 
   const blogFormRef = useRef();
 
-  const handleCreateBlog = async (event) => {
-    event.preventDefault();
-    const newBlog = { title, author, url };
-
+  const handleCreateBlog = async (newBlog) => {
     try {
       const response = await blogService.create(newBlog);
       updateSuccessMessage(
@@ -123,15 +120,7 @@ const App = () => {
           {user.name} logged in <button onClick={handleLogout}>logout</button>
         </p>
         <Togglable buttonLabel='create Blog' ref={blogFormRef}>
-          <BlogForm
-            handleSubmit={handleCreateBlog}
-            handleTitleChange={({ target }) => setTitle(target.value)}
-            handleAuthorChange={({ target }) => setAuthor(target.value)}
-            handleUrlChange={({ target }) => setUrl(target.value)}
-            title={title}
-            author={author}
-            url={url}
-          />
+          <BlogForm createBlog={handleCreateBlog} />
         </Togglable>
 
         {blogs.map((blog) => (
